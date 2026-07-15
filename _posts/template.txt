@@ -1,0 +1,12 @@
+#rename to YYYY-MM-DD-title.md
+#(prefer using the /admin editor instead of creating this by hand)
+---
+#title: "in the quotation marks"
+#date: YYYY-MM-DD
+#image: /images/title/image_name.jpg
+#image_alt: "Image desc"
+#instagram_url: "instagram link here"
+---
+
+#text here
+#for ingredients, use - for bullet points
