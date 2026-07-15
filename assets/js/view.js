@@ -34,18 +34,23 @@ async function renderRecipeList() {
       return;
     }
     listEl.innerHTML = recipes
-      .map(
-        (r) => `
+      .map((r) => {
+        const thumb = r.thumbnail || r.image;
+        return `
       <li>
         <a class="recipe-card" href="recipe.html?slug=${encodeURIComponent(r.slug)}">
-          ${r.image ? `<img class="recipe-card-thumb" src="${escapeHtml(r.image)}" alt="">` : ""}
+          ${
+            thumb
+              ? `<img class="recipe-card-thumb" src="${escapeHtml(thumb)}" alt="" loading="lazy" decoding="async" width="140" height="140">`
+              : ""
+          }
           <div class="recipe-card-body">
             <span class="recipe-card-date">${formatDate(r.date)}</span>
             <h3 class="recipe-card-title">${escapeHtml(r.title)}</h3>
           </div>
         </a>
-      </li>`
-      )
+      </li>`;
+      })
       .join("");
   } catch (err) {
     listEl.innerHTML = `<p class="state-message is-error">Couldn't load recipes: ${escapeHtml(err.message)}</p>`;
@@ -75,7 +80,7 @@ async function renderRecipeDetail() {
       </header>
       ${
         recipe.image
-          ? `<p class="recipe-hero"><img src="${escapeHtml(recipe.image)}" alt="${escapeHtml(recipe.imageAlt || recipe.title)}"></p>`
+          ? `<p class="recipe-hero"><img src="${escapeHtml(recipe.image)}" alt="${escapeHtml(recipe.imageAlt || recipe.title)}" decoding="async"></p>`
           : ""
       }
       ${

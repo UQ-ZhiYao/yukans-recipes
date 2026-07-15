@@ -5,10 +5,14 @@
  * shows forms for creating/editing/deleting recipes.
  */
 const RECIPES_PATH = "data/recipes.json";
+const IMAGE_MAIN_MAX_DIM = 1600;
+const IMAGE_MAIN_QUALITY = 0.82;
+const IMAGE_THUMB_MAX_DIM = 480;
+const IMAGE_THUMB_QUALITY = 0.78;
 
 const els = {};
 let recipesCache = null; // { list, sha }
-let selectedImageFile = null; // { name, dataBase64 }
+let selectedImageFile = null; // { mainName, thumbName, mainBase64, thumbBase64 }
 
 function $(id) {
   return document.getElementById(id);
@@ -160,17 +164,31 @@ function loadRecipeIntoForm(slug) {
   setStatus(els["save-status"], "");
 }
 
-function readFileAsBase64(file) {
+function blobToBase64(blob) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result;
-      const base64 = dataUrl.slice(dataUrl.indexOf(",") + 1);
-      resolve(base64);
-    };
+    reader.onload = () => resolve(reader.result.slice(reader.result.indexOf(",") + 1));
     reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(blob);
   });
+}
+
+// Downscales an uploaded photo to `maxDim` on its long edge and re-encodes it
+// as JPEG, so a multi-megabyte camera photo doesn't get shipped to every
+// visitor of the (much smaller) rendered image. Runs entirely client-side —
+// there's no server to do this for us.
+async function resizeImageToBase64(file, maxDim, quality) {
+  const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+  const width = Math.round(bitmap.width * scale);
+  const height = Math.round(bitmap.height * scale);
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  canvas.getContext("2d").drawImage(bitmap, 0, 0, width, height);
+  bitmap.close();
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+  return blobToBase64(blob);
 }
 
 async function handleImageChange(e) {
@@ -179,10 +197,26 @@ async function handleImageChange(e) {
     selectedImageFile = null;
     return;
   }
-  const base64 = await readFileAsBase64(file);
-  selectedImageFile = { name: file.name, base64 };
-  els["current-image"].innerHTML = `<img class="thumb-preview" src="data:image/*;base64,${base64}" alt="">`;
-  els["remove-image-btn"].hidden = false;
+  setStatus(els["save-status"], "Processing image…");
+  try {
+    const [mainBase64, thumbBase64] = await Promise.all([
+      resizeImageToBase64(file, IMAGE_MAIN_MAX_DIM, IMAGE_MAIN_QUALITY),
+      resizeImageToBase64(file, IMAGE_THUMB_MAX_DIM, IMAGE_THUMB_QUALITY),
+    ]);
+    const baseName = (file.name.replace(/\.[^./]+$/, "") || "image").toLowerCase();
+    selectedImageFile = {
+      mainName: `${baseName}.jpg`,
+      thumbName: `${baseName}_thumb.jpg`,
+      mainBase64,
+      thumbBase64,
+    };
+    els["current-image"].innerHTML = `<img class="thumb-preview" src="data:image/jpeg;base64,${mainBase64}" alt="">`;
+    els["remove-image-btn"].hidden = false;
+    setStatus(els["save-status"], "");
+  } catch (err) {
+    selectedImageFile = null;
+    setStatus(els["save-status"], `Couldn't process image: ${err.message}`, "error");
+  }
 }
 
 async function handleRemoveImage() {
@@ -204,9 +238,12 @@ async function handleRemoveImage() {
   els["remove-image-btn"].disabled = true;
   setStatus(els["save-status"], "Removing image…");
   try {
-    const sha = await GitHubRepo.getFileSha(recipe.image);
-    if (sha) {
-      await GitHubRepo.deleteFile(recipe.image, `Remove image for ${recipe.title}`, sha);
+    for (const path of [recipe.image, recipe.thumbnail]) {
+      if (!path) continue;
+      const sha = await GitHubRepo.getFileSha(path);
+      if (sha) {
+        await GitHubRepo.deleteFile(path, `Remove image for ${recipe.title}`, sha);
+      }
     }
 
     const latest = await GitHubRepo.getTextFile(RECIPES_PATH);
@@ -214,6 +251,7 @@ async function handleRemoveImage() {
     const idx = list.findIndex((r) => r.slug === slug);
     if (idx >= 0) {
       list[idx].image = "";
+      list[idx].thumbnail = "";
       list[idx].imageAlt = "";
     }
     await GitHubRepo.putTextFile(
@@ -252,15 +290,21 @@ async function handleSave(e) {
 
     const existing = recipesCache.list.find((r) => r.slug === slug);
     let imagePath = existing ? existing.image : "";
+    let thumbnailPath = existing ? existing.thumbnail : "";
 
     if (selectedImageFile) {
-      imagePath = `images/${slug}/${selectedImageFile.name}`;
-      const sha = await GitHubRepo.getFileSha(imagePath);
+      imagePath = `images/${slug}/${selectedImageFile.mainName}`;
+      thumbnailPath = `images/${slug}/${selectedImageFile.thumbName}`;
+      const [mainSha, thumbSha] = await Promise.all([
+        GitHubRepo.getFileSha(imagePath),
+        GitHubRepo.getFileSha(thumbnailPath),
+      ]);
+      await GitHubRepo.putBinaryFile(imagePath, selectedImageFile.mainBase64, `Add image for ${title}`, mainSha);
       await GitHubRepo.putBinaryFile(
-        imagePath,
-        selectedImageFile.base64,
-        `Add image for ${title}`,
-        sha
+        thumbnailPath,
+        selectedImageFile.thumbBase64,
+        `Add thumbnail for ${title}`,
+        thumbSha
       );
     }
 
@@ -269,6 +313,7 @@ async function handleSave(e) {
       title,
       date,
       image: imagePath,
+      thumbnail: thumbnailPath,
       imageAlt: els["image-alt-input"].value.trim(),
       instagramUrl: els["instagram-input"].value.trim(),
       body: els["body-input"].value,

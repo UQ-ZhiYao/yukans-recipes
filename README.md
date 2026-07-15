@@ -17,14 +17,31 @@ serves the files in this repo as-is.
 ## How it works
 
 - `data/recipes.json` is the single source of truth: an array of recipe
-  objects (`slug`, `title`, `date`, `image`, `imageAlt`, `instagramUrl`, `body`
-  — `body` is Markdown, rendered client-side with [marked](https://marked.js.org/)).
+  objects (`slug`, `title`, `date`, `image`, `thumbnail`, `imageAlt`,
+  `instagramUrl`, `body` — `body` is Markdown, rendered client-side with
+  [marked](https://marked.js.org/)).
 - `index.html`/`recipe.html` fetch that JSON file directly (same-origin, no
   GitHub API calls, no auth) and render it — this is the read-only output.
+  The recipe list uses `thumbnail` (small); the recipe page uses `image`
+  (full-size) for the hero photo.
 - `admin.html` reads/writes `data/recipes.json` and uploads images to
   `images/<slug>/` directly through the GitHub REST API, authenticated with a
   personal access token you paste in once (kept in `localStorage`, never
   committed).
+
+### Image handling
+
+Uploading a hero image in the admin page doesn't ship the original file —
+a camera photo can be several MB, and the recipe list only ever displays it
+at thumbnail size. Instead, the browser (via `<canvas>`, no server involved)
+generates and uploads two JPEGs per image:
+
+- the **main** image, capped at 1600px on its long edge, used on the recipe
+  page;
+- a **thumbnail**, capped at 480px, used on the recipe list.
+
+This is why "Remove image" deletes two files, and why `recipes.json` has
+both an `image` and a `thumbnail` field per recipe.
 
 ## One-time admin setup
 
