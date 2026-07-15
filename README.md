@@ -22,9 +22,8 @@ serves the files in this repo as-is.
 
 - `data/recipes.json` is the single source of truth: an array of recipe
   objects (`slug`, `title`, `date`, `image`, `thumbnail`, `imageAlt`,
-  `instagramUrl`, `body`, `issueNumber` — `body` is Markdown, rendered
-  client-side with [marked](https://marked.js.org/); `issueNumber` is the
-  companion GitHub Issue used for reactions, see below).
+  `instagramUrl`, `body` — `body` is Markdown, rendered client-side with
+  [marked](https://marked.js.org/)).
 - `index.html`/`recipe.html` fetch that JSON file directly (same-origin, no
   GitHub API calls, no auth) and render it — this is the read-only output.
   The recipe list uses `thumbnail` (small); the recipe page uses `image`
@@ -55,9 +54,7 @@ prefixes them with `../` since it lives one folder down, at `/admin/`.
 1. On GitHub: **Settings → Developer settings → Personal access tokens →
    Fine-grained tokens → Generate new token.**
 2. Restrict it to the **`uq-zhiyao/yukans-recipes`** repository only.
-3. Under Repository permissions, grant **Contents: Read and write** and
-   **Issues: Read and write** (issues are needed for the reactions feature
-   below — saving a new recipe creates its companion issue automatically).
+3. Under Repository permissions, grant **Contents: Read and write**.
 4. Copy the generated token, open `/admin/` on the live site, and paste it
    into the login field.
 
@@ -65,34 +62,6 @@ The token only ever lives in your browser's local storage — it is never
 written to any file in this repo. Treat it like a password: don't paste it
 into a shared/public computer, and revoke it from GitHub's settings if you
 ever suspect it's leaked.
-
-## Reactions (like/love counts)
-
-Each recipe page shows 👍/❤️ counts, and no other platform is involved —
-just this GitHub repo. GitHub has no public API for anonymously
-incrementing an arbitrary counter, so this piggybacks on something GitHub
-already provides: **native reactions on GitHub Issues**. Every recipe has
-a companion Issue (its number is stored as `issueNumber` in
-`data/recipes.json`); `assets/js/reactions.js` reads that issue's reaction
-counts through GitHub's public REST API (no auth needed - works for any
-visitor) and shows a "React on GitHub ↗" link to the issue itself.
-
-- **Reading counts** needs nothing from you - it's a public, unauthenticated
-  API call.
-- **Reacting** requires the visitor to have a GitHub account, since that's
-  the only way GitHub lets anyone react to anything. There's no way around
-  this without introducing another platform (like Firebase) or a server of
-  our own - see the earlier discussion in this project's history if you
-  want that trade-off instead.
-- GitHub enforces one reaction of each kind per account itself, so unlike
-  a homemade counter, this can't be inflated by repeat-clicking.
-- The Admin panel creates a recipe's companion issue automatically the
-  first time it's saved (titled "Reactions: <title>", linking back to the
-  recipe page), and keeps the issue title in sync if the recipe is
-  renamed. This is why the admin token needs **Issues: Read and write**
-  (see above) in addition to Contents.
-- A recipe with no `issueNumber` yet (e.g. very old data) just hides the
-  reactions section instead of showing a broken widget.
 
 ## Installing as apps (PWA)
 

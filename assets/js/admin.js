@@ -311,25 +311,6 @@ async function handleSave(e) {
       );
     }
 
-    // Every recipe gets a companion GitHub Issue: that's what visitors
-    // actually react to (see assets/js/reactions.js) since GitHub has no
-    // public API for anonymously incrementing a counter. Requires the
-    // token to also have Issues: Read and write permission.
-    let issueNumber = existing ? existing.issueNumber : null;
-    if (!issueNumber) {
-      issueNumber = await GitHubRepo.createIssue(
-        `Reactions: ${title}`,
-        `React to **${title}** with 👍 or ❤️ below — counts show up on the recipe page.\n\n` +
-          `View the recipe: https://uq-zhiyao.github.io/yukans-recipes/recipe.html?slug=${slug}`
-      );
-    } else if (existing.title !== title) {
-      try {
-        await GitHubRepo.updateIssueTitle(issueNumber, `Reactions: ${title}`);
-      } catch (err) {
-        // Best-effort - a stale issue title shouldn't block saving the recipe.
-      }
-    }
-
     const updatedRecipe = {
       slug,
       title,
@@ -339,7 +320,6 @@ async function handleSave(e) {
       imageAlt: els["image-alt-input"].value.trim(),
       instagramUrl: els["instagram-input"].value.trim(),
       body: els["body-input"].value,
-      issueNumber,
     };
 
     // Refetch recipes.json right before writing, to minimise the chance

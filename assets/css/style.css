@@ -204,62 +204,6 @@ main {
   color: var(--color-muted);
 }
 
-/* Reactions */
-
-.reactions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--color-border);
-}
-
-.reaction-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  border: 1px solid var(--color-border);
-  background: var(--color-card-bg);
-  border-radius: 999px;
-  padding: 0.5rem 1rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.reaction-emoji {
-  font-size: 1.1rem;
-  line-height: 1;
-}
-
-.reaction-count {
-  min-width: 1ch;
-}
-
-.reaction-link {
-  font-weight: 600;
-  text-decoration: none;
-  font-size: 0.9rem;
-}
-
-.reaction-refresh {
-  border: 1px solid var(--color-border);
-  background: transparent;
-  border-radius: 999px;
-  width: 2rem;
-  height: 2rem;
-  line-height: 1;
-  font-size: 1rem;
-  color: var(--color-muted);
-  cursor: pointer;
-}
-
-.reaction-refresh:hover {
-  color: var(--color-accent);
-  border-color: var(--color-accent);
-}
-
 .state-message {
   color: var(--color-muted);
   padding: 2rem 0;
