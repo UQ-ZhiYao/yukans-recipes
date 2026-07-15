@@ -167,9 +167,32 @@ function initInstallPrompt() {
   });
 }
 
+// Without this, an installed/long-lived PWA window can keep showing an old
+// cached version indefinitely: a new service worker activating in the
+// background doesn't change what's already loaded in the page until it's
+// reloaded. This page has no unsaved data to lose, so it's safe to reload
+// automatically the moment a new version takes over.
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("sw.js").catch(() => {
-    /* offline install support is a nice-to-have, not required for the app to work */
+
+  // controllerchange also fires the very first time a service worker ever
+  // claims this page (via clients.claim() in sw.js), not just on updates -
+  // only treat it as "a new version took over" if a controller already
+  // existed when this script ran, i.e. this isn't the first-ever visit.
+  const hadController = Boolean(navigator.serviceWorker.controller);
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!hadController || refreshing) return;
+    refreshing = true;
+    window.location.reload();
   });
+
+  navigator.serviceWorker
+    .register("sw.js")
+    .then((registration) => {
+      registration.update(); // check for a newer version now, not just on next navigation
+    })
+    .catch(() => {
+      /* offline install support is a nice-to-have, not required for the app to work */
+    });
 }

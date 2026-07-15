@@ -356,6 +356,30 @@ main {
   border-radius: 4px;
 }
 
+.update-banner {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.update-banner .wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.9rem;
+}
+
+.update-banner .btn-secondary {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.update-banner .btn-secondary:hover {
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.15);
+}
+
 .admin-header .btn-secondary {
   color: #fff;
   border-color: rgba(255, 255, 255, 0.35);

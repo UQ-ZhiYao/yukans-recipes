@@ -496,11 +496,38 @@ function initInstallPrompt() {
   });
 }
 
+// Unlike the Member app, this page can have an unsaved edit in progress, so
+// it must never auto-reload out from under the admin - instead show a
+// dismissable "a new version is available" banner and let them refresh
+// when it's convenient (e.g. right after saving).
+function initServiceWorkerUpdatePrompt() {
+  const banner = document.getElementById("update-banner");
+  const refreshBtn = document.getElementById("update-refresh-btn");
+  if (!banner || !refreshBtn) return;
+
+  // controllerchange also fires the very first time a service worker ever
+  // claims this page (via clients.claim() in sw.js), not just on updates -
+  // only show the banner if a controller already existed when this script
+  // ran, i.e. this isn't the first-ever visit.
+  const hadController = Boolean(navigator.serviceWorker.controller);
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!hadController) return;
+    banner.hidden = false;
+  });
+
+  refreshBtn.addEventListener("click", () => window.location.reload());
+}
+
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("sw.js").catch(() => {
-    /* offline install support is a nice-to-have, not required for the app to work */
-  });
+  navigator.serviceWorker
+    .register("sw.js")
+    .then((registration) => {
+      registration.update(); // check for a newer version now, not just on next navigation
+    })
+    .catch(() => {
+      /* offline install support is a nice-to-have, not required for the app to work */
+    });
 }
 
 function initAdmin() {
@@ -515,6 +542,7 @@ function initAdmin() {
   els["date-input"].value = todayIso();
   initRichEditor();
   initInstallPrompt();
+  initServiceWorkerUpdatePrompt();
   registerServiceWorker();
   tryAutoLogin();
 }
