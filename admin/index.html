@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Admin — Yukan's recipes</title>
-  <link rel="stylesheet" href="../assets/css/style.css?v=2">
+  <link rel="stylesheet" href="../assets/css/style.css?v=5">
 
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#175cd3">
@@ -89,8 +89,38 @@
           </div>
 
           <div class="field">
-            <label for="body-input">Recipe (Markdown)</label>
-            <textarea id="body-input" placeholder="Ingredients, steps, notes..."></textarea>
+            <label for="body-input">Recipe</label>
+            <div class="editor-toolbar" role="toolbar" aria-label="Text formatting">
+              <button type="button" class="toolbar-btn" data-cmd="bold" title="Bold"><b>B</b></button>
+              <button type="button" class="toolbar-btn" data-cmd="italic" title="Italic"><i>I</i></button>
+              <button type="button" class="toolbar-btn" data-cmd="underline" title="Underline"><u>U</u></button>
+              <button type="button" class="toolbar-btn" data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
+              <span class="toolbar-sep"></span>
+              <select class="toolbar-select" id="block-format-select" title="Paragraph style">
+                <option value="P">Paragraph</option>
+                <option value="H2">Heading</option>
+                <option value="H3">Subheading</option>
+                <option value="BLOCKQUOTE">Quote</option>
+                <option value="PRE">Code block</option>
+              </select>
+              <select class="toolbar-select" id="font-size-select" title="Font size">
+                <option value="2">Small</option>
+                <option value="3" selected>Normal</option>
+                <option value="5">Large</option>
+                <option value="7">Huge</option>
+              </select>
+              <span class="toolbar-sep"></span>
+              <button type="button" class="toolbar-btn" data-cmd="insertUnorderedList" title="Bullet list">&#8226;&#8226;&#8226;</button>
+              <button type="button" class="toolbar-btn" data-cmd="insertOrderedList" title="Numbered list">1.2.3.</button>
+              <button type="button" class="toolbar-btn" id="toolbar-link-btn" title="Insert link">&#128279;</button>
+              <button type="button" class="toolbar-btn" data-cmd="removeFormat" title="Clear formatting">Tx</button>
+            </div>
+            <div
+              id="body-input"
+              class="rich-editor"
+              contenteditable="true"
+              data-placeholder="Ingredients, steps, notes..."
+            ></div>
           </div>
 
           <div class="btn-row">
@@ -104,7 +134,8 @@
     </div>
   </main>
 
+  <script src="../assets/vendor/marked.min.js?v=2"></script>
   <script src="../assets/js/github-api.js?v=2"></script>
-  <script src="../assets/js/admin.js?v=2"></script>
+  <script src="../assets/js/admin.js?v=3"></script>
 </body>
 </html>

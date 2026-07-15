@@ -136,6 +136,7 @@ function resetForm() {
   els["recipe-form"].reset();
   els["date-input"].value = todayIso();
   els["recipe-select"].value = "";
+  els["body-input"].innerHTML = ""; // not a form control, .reset() doesn't touch it
   selectedImageFile = null;
   els["current-image"].innerHTML = "";
   els["remove-image-btn"].hidden = true;
@@ -154,7 +155,10 @@ function loadRecipeIntoForm(slug) {
   els["date-input"].value = recipe.date || todayIso();
   els["image-alt-input"].value = recipe.imageAlt || "";
   els["instagram-input"].value = recipe.instagramUrl || "";
-  els["body-input"].value = recipe.body || "";
+  // recipe.body may be plain Markdown (older recipes) or HTML (already
+  // saved by this rich text editor) - marked.parse() passes well-formed
+  // HTML straight through unchanged, so this line handles both uniformly.
+  els["body-input"].innerHTML = marked.parse(recipe.body || "");
   els["image-input"].value = "";
   // recipe.image is stored repo-root-relative (for the public site, which
   // lives at the repo root); this admin page lives one level down at
@@ -319,7 +323,7 @@ async function handleSave(e) {
       thumbnail: thumbnailPath,
       imageAlt: els["image-alt-input"].value.trim(),
       instagramUrl: els["instagram-input"].value.trim(),
-      body: els["body-input"].value,
+      body: els["body-input"].innerHTML,
     };
 
     // Refetch recipes.json right before writing, to minimise the chance
@@ -377,6 +381,99 @@ async function handleDelete() {
   }
 }
 
+// Rich text toolbar for the recipe body. Uses the browser's built-in
+// execCommand editing commands - deprecated from the spec, but still the
+// only cross-browser way to do basic contenteditable formatting (bold,
+// underline, font size, lists, ...) without pulling in a whole editor
+// library for what's otherwise a plain HTML/CSS/JS project.
+function initRichEditor() {
+  const editor = els["body-input"];
+  const toolbar = document.querySelector(".editor-toolbar");
+  if (!editor || !toolbar) return;
+
+  let savedRange = null;
+
+  function saveSelection() {
+    const sel = window.getSelection();
+    if (sel.rangeCount && editor.contains(sel.anchorNode)) {
+      savedRange = sel.getRangeAt(0);
+    }
+  }
+
+  function restoreSelection() {
+    if (!savedRange) return;
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(savedRange);
+  }
+
+  editor.addEventListener("keyup", saveSelection);
+  editor.addEventListener("mouseup", saveSelection);
+
+  function updateActiveStates() {
+    toolbar.querySelectorAll(".toolbar-btn[data-cmd]").forEach((btn) => {
+      let active = false;
+      try {
+        active = document.queryCommandState(btn.dataset.cmd);
+      } catch (err) {
+        active = false;
+      }
+      btn.classList.toggle("is-active", active);
+    });
+  }
+
+  editor.addEventListener("keyup", updateActiveStates);
+  editor.addEventListener("mouseup", updateActiveStates);
+  editor.addEventListener("focus", updateActiveStates);
+
+  toolbar.querySelectorAll(".toolbar-btn[data-cmd]").forEach((btn) => {
+    // mousedown (not click) + preventDefault stops the button from
+    // stealing focus/collapsing the editor's text selection before the
+    // command runs.
+    btn.addEventListener("mousedown", (e) => e.preventDefault());
+    btn.addEventListener("click", () => {
+      editor.focus();
+      document.execCommand(btn.dataset.cmd, false, null);
+      updateActiveStates();
+    });
+  });
+
+  const blockSelect = document.getElementById("block-format-select");
+  blockSelect.addEventListener("mousedown", saveSelection);
+  blockSelect.addEventListener("change", () => {
+    editor.focus();
+    restoreSelection();
+    document.execCommand("formatBlock", false, blockSelect.value);
+    blockSelect.blur();
+  });
+
+  const fontSizeSelect = document.getElementById("font-size-select");
+  fontSizeSelect.addEventListener("mousedown", saveSelection);
+  fontSizeSelect.addEventListener("change", () => {
+    editor.focus();
+    restoreSelection();
+    document.execCommand("fontSize", false, fontSizeSelect.value);
+    fontSizeSelect.blur();
+  });
+
+  const linkBtn = document.getElementById("toolbar-link-btn");
+  linkBtn.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    saveSelection();
+  });
+  linkBtn.addEventListener("click", () => {
+    editor.focus();
+    restoreSelection();
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed) {
+      window.alert("Select some text first, then click the link button.");
+      return;
+    }
+    const url = window.prompt("Link URL:", "https://");
+    if (url) document.execCommand("createLink", false, url);
+  });
+}
+
 let deferredInstallPrompt = null;
 
 function initInstallPrompt() {
@@ -416,6 +513,7 @@ function initAdmin() {
   els["image-input"].addEventListener("change", handleImageChange);
   els["remove-image-btn"].addEventListener("click", handleRemoveImage);
   els["date-input"].value = todayIso();
+  initRichEditor();
   initInstallPrompt();
   registerServiceWorker();
   tryAutoLogin();

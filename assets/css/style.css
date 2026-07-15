@@ -413,6 +413,112 @@ main {
   resize: vertical;
 }
 
+/* Rich text editor (recipe body) */
+
+.editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem;
+  border: 1px solid var(--color-border);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  background: #f4f1ec;
+}
+
+.toolbar-btn {
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.toolbar-btn:hover {
+  border-color: var(--color-border);
+  background: #fff;
+}
+
+.toolbar-btn.is-active {
+  border-color: var(--color-accent);
+  background: #fdf1ea;
+  color: var(--color-accent-dark);
+}
+
+.toolbar-sep {
+  width: 1px;
+  height: 1.4rem;
+  background: var(--color-border);
+  margin: 0 0.2rem;
+}
+
+.editor-toolbar .toolbar-select {
+  /* Overrides ".field select { width: 100% }" - needs the extra class in
+     the selector to win on specificity, not just source order. */
+  width: auto;
+  height: 2rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--color-text);
+}
+
+.rich-editor {
+  min-height: 260px;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0 0 6px 6px;
+  background: #fff;
+  color: var(--color-text);
+  overflow-y: auto;
+}
+
+.rich-editor:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -1px;
+}
+
+.rich-editor:empty::before {
+  content: attr(data-placeholder);
+  color: var(--color-muted);
+}
+
+.rich-editor p {
+  margin: 0 0 1em;
+}
+
+.rich-editor ul,
+.rich-editor ol {
+  margin: 0 0 1em;
+  padding-left: 1.4rem;
+}
+
+.rich-editor blockquote {
+  margin: 0 0 1em;
+  padding-left: 1rem;
+  border-left: 3px solid var(--color-border);
+  color: var(--color-muted);
+}
+
+.rich-editor pre {
+  margin: 0 0 1em;
+  padding: 0.6rem 0.8rem;
+  background: #f4f1ec;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85rem;
+}
+
 .field-row {
   display: flex;
   gap: 1rem;

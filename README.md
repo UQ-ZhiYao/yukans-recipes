@@ -22,8 +22,9 @@ serves the files in this repo as-is.
 
 - `data/recipes.json` is the single source of truth: an array of recipe
   objects (`slug`, `title`, `date`, `image`, `thumbnail`, `imageAlt`,
-  `instagramUrl`, `body` — `body` is Markdown, rendered client-side with
-  [marked](https://marked.js.org/)).
+  `instagramUrl`, `body` — `body` is HTML from the admin's rich text editor
+  (older recipes have plain Markdown instead; both render fine, see below),
+  rendered client-side with [marked](https://marked.js.org/)).
 - `index.html`/`recipe.html` fetch that JSON file directly (same-origin, no
   GitHub API calls, no auth) and render it — this is the read-only output.
   The recipe list uses `thumbnail` (small); the recipe page uses `image`
@@ -48,6 +49,27 @@ This is why "Remove image" deletes two files, and why `recipes.json` has
 both an `image` and a `thumbnail` field per recipe. Paths in `recipes.json`
 are stored relative to the repo root (for the public pages); the admin page
 prefixes them with `../` since it lives one folder down, at `/admin/`.
+
+### Recipe text formatting
+
+The "Recipe" field in the admin is a real rich text editor (bold, italic,
+underline, strikethrough, font size, headings, quote, code block, bullet/
+numbered lists, links) — not a plain Markdown textarea. It's built on the
+browser's own `contenteditable` + `execCommand`, so there's no editor
+library to vendor; its output is plain HTML, saved directly into
+`recipes.json`'s `body` field.
+
+Recipes written before this existed have plain Markdown in `body` instead
+of HTML. Both work, forever: [marked](https://marked.js.org/) (used to
+render `body` on the public pages) passes well-formed raw HTML straight
+through unchanged, so it renders Markdown and HTML bodies identically well.
+The admin editor does the same thing in reverse when you open an older
+recipe — it runs the stored Markdown through `marked.parse()` before
+displaying it, so it always shows up correctly formatted (not literal
+`**asterisks**`) regardless of which format that recipe happens to be
+stored in. Saving from the editor always writes HTML from then on, so
+recipes quietly upgrade format the next time they're edited — no manual
+migration needed.
 
 ## One-time admin setup
 
