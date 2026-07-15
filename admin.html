@@ -6,12 +6,26 @@
   <meta name="robots" content="noindex, nofollow">
   <title>Admin — Yukan's recipes</title>
   <link rel="stylesheet" href="assets/css/style.css">
+
+  <link rel="manifest" href="admin-manifest.webmanifest">
+  <meta name="theme-color" content="#2b2622">
+  <link rel="icon" href="assets/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Recipes Admin">
 </head>
 <body class="admin-body">
   <header class="admin-header">
     <div class="wrapper">
-      <a href="index.html">&larr; Yukan's recipes</a>
-      <span class="admin-badge">Admin · edit only</span>
+      <div class="admin-header-left">
+        <a href="index.html">&larr; Yukan's recipes</a>
+        <span class="admin-badge">Admin · edit only</span>
+      </div>
+      <div class="admin-header-right">
+        <button id="install-btn" class="btn btn-secondary btn-sm" type="button" hidden>Install app</button>
+        <button id="logout-btn" class="btn btn-secondary btn-sm" type="button" hidden>Log out</button>
+      </div>
     </div>
   </header>
 
@@ -36,13 +50,10 @@
       </section>
 
       <section id="editor-panel" class="admin-panel" hidden>
-        <div class="btn-row" style="justify-content: space-between; margin-bottom: 1.5rem;">
-          <div class="recipe-picker">
-            <label for="recipe-select" style="margin:0;">Recipe:</label>
-            <select id="recipe-select"></select>
-            <button id="new-recipe-btn" class="btn btn-secondary" type="button">New recipe</button>
-          </div>
-          <button id="logout-btn" class="btn btn-secondary" type="button">Log out</button>
+        <div class="recipe-picker">
+          <label for="recipe-select">Recipe:</label>
+          <select id="recipe-select"></select>
+          <button id="new-recipe-btn" class="btn btn-secondary" type="button">New recipe</button>
         </div>
 
         <form id="recipe-form">
@@ -64,10 +75,13 @@
 
           <div class="field">
             <label for="image-input">Hero image
-              <span class="hint">Uploading a new file replaces the current image for this recipe.</span>
+              <span class="hint">Uploading a file adds or replaces the image for this recipe.</span>
             </label>
-            <input type="file" id="image-input" accept="image/*">
             <div id="current-image"></div>
+            <div class="btn-row image-btn-row">
+              <input type="file" id="image-input" accept="image/*">
+              <button id="remove-image-btn" class="btn btn-danger btn-sm" type="button" hidden>Remove image</button>
+            </div>
           </div>
 
           <div class="field">

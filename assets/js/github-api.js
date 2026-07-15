@@ -113,6 +113,14 @@ const GitHubRepo = (() => {
     }
   }
 
+  // Deletes a file from the repo. sha is required by the GitHub API.
+  async function deleteFile(path, message, sha) {
+    return request(`contents/${path}`, {
+      method: "DELETE",
+      body: JSON.stringify({ message, sha, branch: BRANCH }),
+    });
+  }
+
   return {
     OWNER,
     REPO,
@@ -125,5 +133,6 @@ const GitHubRepo = (() => {
     putTextFile,
     putBinaryFile,
     getFileSha,
+    deleteFile,
   };
 })();

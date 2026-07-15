@@ -22,6 +22,7 @@ function cacheEls() {
     "login-status",
     "editor-panel",
     "logout-btn",
+    "install-btn",
     "recipe-select",
     "new-recipe-btn",
     "delete-btn",
@@ -29,6 +30,7 @@ function cacheEls() {
     "title-input",
     "date-input",
     "image-input",
+    "remove-image-btn",
     "image-alt-input",
     "instagram-input",
     "body-input",
@@ -98,6 +100,7 @@ async function handleLogin() {
 async function handleLoginSuccess() {
   els["login-panel"].hidden = true;
   els["editor-panel"].hidden = false;
+  els["logout-btn"].hidden = false;
   setStatus(els["login-status"], "");
   await refreshRecipeList();
   resetForm();
@@ -108,6 +111,7 @@ function handleLogout() {
   recipesCache = null;
   els["editor-panel"].hidden = true;
   els["login-panel"].hidden = false;
+  els["logout-btn"].hidden = true;
   els["token-input"].value = "";
 }
 
@@ -132,6 +136,7 @@ function resetForm() {
   els["recipe-select"].value = "";
   selectedImageFile = null;
   els["current-image"].innerHTML = "";
+  els["remove-image-btn"].hidden = true;
   els["delete-btn"].hidden = true;
   els["body-preview"].innerHTML = "";
   setStatus(els["save-status"], "");
@@ -153,6 +158,7 @@ function loadRecipeIntoForm(slug) {
   els["current-image"].innerHTML = recipe.image
     ? `<img class="thumb-preview" src="${recipe.image}" onerror="this.remove()" alt="">`
     : "";
+  els["remove-image-btn"].hidden = !recipe.image;
   els["delete-btn"].hidden = false;
   updatePreview();
   setStatus(els["save-status"], "");
@@ -183,6 +189,57 @@ async function handleImageChange(e) {
   }
   const base64 = await readFileAsBase64(file);
   selectedImageFile = { name: file.name, base64 };
+  els["current-image"].innerHTML = `<img class="thumb-preview" src="data:image/*;base64,${base64}" alt="">`;
+  els["remove-image-btn"].hidden = false;
+}
+
+async function handleRemoveImage() {
+  const slug = els["recipe-select"].value;
+  const recipe = slug ? recipesCache.list.find((r) => r.slug === slug) : null;
+
+  // A locally-picked file that hasn't been saved yet just gets un-picked,
+  // no repo changes needed.
+  if (!recipe || !recipe.image) {
+    selectedImageFile = null;
+    els["image-input"].value = "";
+    els["current-image"].innerHTML = "";
+    els["remove-image-btn"].hidden = true;
+    return;
+  }
+
+  if (!window.confirm("Remove this recipe's image? The file will be deleted from the repo.")) return;
+
+  els["remove-image-btn"].disabled = true;
+  setStatus(els["save-status"], "Removing image…");
+  try {
+    const sha = await GitHubRepo.getFileSha(recipe.image);
+    if (sha) {
+      await GitHubRepo.deleteFile(recipe.image, `Remove image for ${recipe.title}`, sha);
+    }
+
+    const latest = await GitHubRepo.getTextFile(RECIPES_PATH);
+    const list = latest ? JSON.parse(latest.text) : [];
+    const idx = list.findIndex((r) => r.slug === slug);
+    if (idx >= 0) {
+      list[idx].image = "";
+      list[idx].imageAlt = "";
+    }
+    await GitHubRepo.putTextFile(
+      RECIPES_PATH,
+      `${JSON.stringify(list, null, 2)}\n`,
+      `Remove image for ${recipe.title}`,
+      latest ? latest.sha : undefined
+    );
+
+    setStatus(els["save-status"], "Image removed.", "success");
+    await refreshRecipeList();
+    els["recipe-select"].value = slug;
+    loadRecipeIntoForm(slug);
+  } catch (err) {
+    setStatus(els["save-status"], `Remove failed: ${err.message}`, "error");
+  } finally {
+    els["remove-image-btn"].disabled = false;
+  }
 }
 
 async function handleSave(e) {
@@ -280,6 +337,35 @@ async function handleDelete() {
   }
 }
 
+let deferredInstallPrompt = null;
+
+function initInstallPrompt() {
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    els["install-btn"].hidden = false;
+  });
+
+  els["install-btn"].addEventListener("click", async () => {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    els["install-btn"].hidden = true;
+  });
+
+  window.addEventListener("appinstalled", () => {
+    els["install-btn"].hidden = true;
+  });
+}
+
+function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+  navigator.serviceWorker.register("admin-sw.js").catch(() => {
+    /* offline install support is a nice-to-have, not required for the app to work */
+  });
+}
+
 function initAdmin() {
   cacheEls();
   els["login-btn"].addEventListener("click", handleLogin);
@@ -289,8 +375,11 @@ function initAdmin() {
   els["recipe-form"].addEventListener("submit", handleSave);
   els["delete-btn"].addEventListener("click", handleDelete);
   els["image-input"].addEventListener("change", handleImageChange);
+  els["remove-image-btn"].addEventListener("click", handleRemoveImage);
   els["body-input"].addEventListener("input", updatePreview);
   els["date-input"].value = todayIso();
+  initInstallPrompt();
+  registerServiceWorker();
   tryAutoLogin();
 }
 
