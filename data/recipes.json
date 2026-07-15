@@ -1,15 +1,5 @@
 [
   {
-    "slug": "zy-recipes-salmon-fried-rice",
-    "title": "ZY-Recipes: Salmon Fried Rice",
-    "date": "2026-07-15",
-    "image": "images/zy-recipes-salmon-fried-rice/Fride Rice.jpg",
-    "thumbnail": "images/zy-recipes-salmon-fried-rice/Fride Rice_thumb.jpg",
-    "imageAlt": "",
-    "instagramUrl": "",
-    "body": "Easy Cook\n\nIngredients:\n- Frozen Cooked Rice\n- 2 eggs (Puluh biji pun boleh)\n- 0.5 slice of Fired salmon\n- 1 spoon of Spring Onion\n- 1 spoon of garlic\n- 1 spoon of dry chilies\n - Olive oil\n"
-  },
-  {
     "slug": "japanese-salmon-bento",
     "title": "ZY-Recipes: Japanese Salmon Bento",
     "date": "2026-07-15",
@@ -17,6 +7,16 @@
     "imageAlt": "",
     "instagramUrl": "",
     "body": "Easy Cook.\n\nI think everyone can do it. So no necessary to mention."
+  },
+  {
+    "slug": "zy-recipes-salmon-fried-rice",
+    "title": "ZY-Recipes: Salmon Fried Rice",
+    "date": "2026-07-15",
+    "image": "images/zy-recipes-salmon-fried-rice/Fride Rice.jpg",
+    "thumbnail": "images/zy-recipes-salmon-fried-rice/Fride Rice_thumb.jpg",
+    "imageAlt": "",
+    "instagramUrl": "",
+    "body": "Easy Cook\n\nIngredients:\n- Frozen Cooked Rice\n- 2 eggs (Puluh biji pun boleh)\n- 1/2 slice of Fired salmon\n- 1 spoon of Spring Onion\n- 1 spoon of garlic\n- 1 spoon of dry chilies\n- 1 spoon of light soy sauce\n- 1/2 spoon of white pepper\n- 1/2 spoon of curry powder\n- Olive oil\n"
   },
   {
     "slug": "halloumi-sandwich",
