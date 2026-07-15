@@ -22,8 +22,9 @@ serves the files in this repo as-is.
 
 - `data/recipes.json` is the single source of truth: an array of recipe
   objects (`slug`, `title`, `date`, `image`, `thumbnail`, `imageAlt`,
-  `instagramUrl`, `body` — `body` is Markdown, rendered client-side with
-  [marked](https://marked.js.org/)).
+  `instagramUrl`, `body`, `issueNumber` — `body` is Markdown, rendered
+  client-side with [marked](https://marked.js.org/); `issueNumber` is the
+  companion GitHub Issue used for reactions, see below).
 - `index.html`/`recipe.html` fetch that JSON file directly (same-origin, no
   GitHub API calls, no auth) and render it — this is the read-only output.
   The recipe list uses `thumbnail` (small); the recipe page uses `image`
@@ -54,7 +55,9 @@ prefixes them with `../` since it lives one folder down, at `/admin/`.
 1. On GitHub: **Settings → Developer settings → Personal access tokens →
    Fine-grained tokens → Generate new token.**
 2. Restrict it to the **`uq-zhiyao/yukans-recipes`** repository only.
-3. Under Repository permissions, grant **Contents: Read and write**.
+3. Under Repository permissions, grant **Contents: Read and write** and
+   **Issues: Read and write** (issues are needed for the reactions feature
+   below — saving a new recipe creates its companion issue automatically).
 4. Copy the generated token, open `/admin/` on the live site, and paste it
    into the login field.
 
@@ -63,68 +66,33 @@ written to any file in this repo. Treat it like a password: don't paste it
 into a shared/public computer, and revoke it from GitHub's settings if you
 ever suspect it's leaked.
 
-## Setting up reactions (like/love counts)
+## Reactions (like/love counts)
 
-Each recipe page has like/love buttons with a shared count that every
-visitor sees — not just a per-browser tally. Since this site has no
-backend and nobody except you holds write credentials to this repo, that
-shared number lives in a free [Firebase](https://firebase.google.com)
-Firestore database instead, called directly from the browser via
-Firestore's plain REST API (no SDK to download — `assets/js/reactions.js`
-is a few small `fetch()` calls). Until you complete this setup, the
-reactions section quietly doesn't render — nothing else on the site is
-affected.
+Each recipe page shows 👍/❤️ counts, and no other platform is involved —
+just this GitHub repo. GitHub has no public API for anonymously
+incrementing an arbitrary counter, so this piggybacks on something GitHub
+already provides: **native reactions on GitHub Issues**. Every recipe has
+a companion Issue (its number is stored as `issueNumber` in
+`data/recipes.json`); `assets/js/reactions.js` reads that issue's reaction
+counts through GitHub's public REST API (no auth needed - works for any
+visitor) and shows a "React on GitHub ↗" link to the issue itself.
 
-1. Go to the [Firebase console](https://console.firebase.google.com),
-   create a free project (no billing required for this).
-2. **Build → Firestore Database → Create database.** Start in production
-   mode (any region is fine).
-3. In Firestore, go to the **Rules** tab and replace the rules with:
-
-   ```
-   rules_version = '2';
-   service cloud.firestore {
-     match /databases/{database}/documents {
-       match /reactions/{slug} {
-         allow get: if true;
-         allow list: if false;
-         allow create: if request.resource.data.keys().hasOnly(['likes', 'loves'])
-                       && request.resource.data.likes is int && request.resource.data.likes >= 0 && request.resource.data.likes <= 1
-                       && request.resource.data.loves is int && request.resource.data.loves >= 0 && request.resource.data.loves <= 1;
-         allow update: if request.resource.data.keys().hasOnly(['likes', 'loves'])
-                       && request.resource.data.likes is int && request.resource.data.loves is int
-                       && (
-                            (request.resource.data.likes == resource.data.likes + 1 && request.resource.data.loves == resource.data.loves)
-                         || (request.resource.data.loves == resource.data.loves + 1 && request.resource.data.likes == resource.data.likes)
-                          );
-         allow delete: if false;
-       }
-     }
-   }
-   ```
-
-   This only ever allows creating a recipe's reaction doc with 0/1 counts,
-   or bumping exactly one of `likes`/`loves` by exactly 1 per request —
-   nothing else is ever writable, and nobody can list/enumerate all
-   documents. It can't stop someone from clicking rapidly with a script
-   (there's no login to rate-limit against), but it can't be used to
-   tamper with anything beyond these two small counters either.
-4. **Project settings (gear icon) → General → Your apps → Web app (`</>`).**
-   Register an app (no Firebase Hosting needed). Copy the `projectId` and
-   `apiKey` from the shown config object — these are public identifiers,
-   not secrets; Firebase's security model relies on the Rules above, not
-   on hiding them.
-5. Paste both into `assets/js/reactions.js`:
-
-   ```js
-   const FIRESTORE_CONFIG = {
-     projectId: "your-project-id",
-     apiKey: "your-web-api-key",
-   };
-   ```
-
-That's it — no other files need to change. Reaction counts start at 0/0
-for every recipe the first time someone reacts to it.
+- **Reading counts** needs nothing from you - it's a public, unauthenticated
+  API call.
+- **Reacting** requires the visitor to have a GitHub account, since that's
+  the only way GitHub lets anyone react to anything. There's no way around
+  this without introducing another platform (like Firebase) or a server of
+  our own - see the earlier discussion in this project's history if you
+  want that trade-off instead.
+- GitHub enforces one reaction of each kind per account itself, so unlike
+  a homemade counter, this can't be inflated by repeat-clicking.
+- The Admin panel creates a recipe's companion issue automatically the
+  first time it's saved (titled "Reactions: <title>", linking back to the
+  recipe page), and keeps the issue title in sync if the recipe is
+  renamed. This is why the admin token needs **Issues: Read and write**
+  (see above) in addition to Contents.
+- A recipe with no `issueNumber` yet (e.g. very old data) just hides the
+  reactions section instead of showing a broken widget.
 
 ## Installing as apps (PWA)
 

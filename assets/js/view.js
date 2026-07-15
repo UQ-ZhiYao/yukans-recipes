@@ -133,7 +133,7 @@ async function renderRecipeDetail() {
       <div id="reactions" class="reactions"></div>
       <a class="back-link" href="index.html">&larr; Back to all recipes</a>
     `;
-    initReactions(recipe.slug, document.getElementById("reactions"));
+    initReactions(recipe, document.getElementById("reactions"));
   } catch (err) {
     container.innerHTML = `<p class="state-message is-error">Couldn't load recipe: ${escapeHtml(err.message)}</p>`;
   }

@@ -1,147 +1,75 @@
 /*
  * Shared like/love counts per recipe, view-only-page feature.
  *
- * There's no backend in this project, and reaction counts need to be
- * visible to every visitor (not just stored in one browser) - that
- * requires *some* shared place to hold a number. This uses Firestore's
- * plain REST API directly (no SDK download) so every visitor's browser
- * can read/increment a small "reactions" document per recipe. Security
- * is enforced entirely by Firestore Rules (see README): writes are only
- * ever allowed to increment likes/loves by exactly 1, nothing else.
+ * There's no backend in this project, and GitHub has no public API for
+ * anonymously incrementing an arbitrary counter - the only thing GitHub
+ * itself lets any visitor react to is an Issue (or PR/Discussion), and
+ * only if they have a GitHub account. So each recipe has a companion
+ * GitHub Issue (see data/recipes.json's `issueNumber`), and this reads
+ * that issue's native reaction counts through GitHub's public REST API
+ * (no auth, no token, works for anyone viewing the page) and links out
+ * to the issue itself for actually reacting.
  *
- * FIRESTORE_CONFIG.projectId/apiKey are public identifiers, not secrets -
- * Firebase's security model relies on Firestore Rules, not on hiding
- * these values. Fill them in after creating a free Firebase project
- * (see README "Setting up reactions (Firestore)").
+ * GitHub's own +1/heart reactions map directly to Like/Love, and GitHub
+ * enforces one reaction of each kind per account - no localStorage
+ * tracking needed here, unlike a build-it-yourself counter.
  */
-const FIRESTORE_CONFIG = {
-  projectId: "", // e.g. "yukans-recipes-12345"
-  apiKey: "", // Firebase "Web API Key" from the same project
-};
+const REACTIONS_REPO = "uq-zhiyao/yukans-recipes";
 
-function firestoreDocUrl(slug) {
-  return `https://firestore.googleapis.com/v1/projects/${FIRESTORE_CONFIG.projectId}/databases/(default)/documents/reactions/${encodeURIComponent(slug)}?key=${FIRESTORE_CONFIG.apiKey}`;
-}
-
-function firestoreCommitUrl() {
-  return `https://firestore.googleapis.com/v1/projects/${FIRESTORE_CONFIG.projectId}/databases/(default)/documents:commit?key=${FIRESTORE_CONFIG.apiKey}`;
-}
-
-async function fetchReactionCounts(slug) {
-  const res = await fetch(firestoreDocUrl(slug));
-  if (res.status === 404) return { likes: 0, loves: 0 };
-  if (!res.ok) throw new Error(`Firestore ${res.status}`);
-  const data = await res.json();
-  const fields = data.fields || {};
-  return {
-    likes: parseInt((fields.likes && fields.likes.integerValue) || "0", 10),
-    loves: parseInt((fields.loves && fields.loves.integerValue) || "0", 10),
-  };
-}
-
-// Atomically increments one field by 1, creating the document if it
-// doesn't exist yet. An empty `update` + `updateMask` means "don't touch
-// any regular fields"; the accompanying updateTransforms increment is
-// what actually creates/bumps the field (base value defaults to 0 if the
-// document or field doesn't exist yet).
-async function incrementReactionField(slug, field) {
-  const docName = `projects/${FIRESTORE_CONFIG.projectId}/databases/(default)/documents/reactions/${slug}`;
-  const res = await fetch(firestoreCommitUrl(), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      writes: [
-        {
-          update: { name: docName, fields: {} },
-          updateMask: { fieldPaths: [] },
-          updateTransforms: [{ fieldPath: field, increment: { integerValue: "1" } }],
-        },
-      ],
-    }),
+async function fetchIssueReactionCounts(issueNumber) {
+  const res = await fetch(`https://api.github.com/repos/${REACTIONS_REPO}/issues/${issueNumber}`, {
+    headers: { Accept: "application/vnd.github+json" },
   });
-  if (!res.ok) throw new Error(`Firestore ${res.status}`);
+  if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+  const data = await res.json();
+  const reactions = data.reactions || {};
+  return { likes: reactions["+1"] || 0, loves: reactions.heart || 0 };
 }
 
-function reactedKey(slug, kind) {
-  return `yukansRecipesReacted:${slug}:${kind}`;
-}
-
-function hasReacted(slug, kind) {
-  return localStorage.getItem(reactedKey(slug, kind)) === "1";
-}
-
-function markReacted(slug, kind) {
-  localStorage.setItem(reactedKey(slug, kind), "1");
-}
-
-// Renders the like/love buttons + counts into `container` for the given
-// recipe slug, and wires up click handling. No-ops quietly (renders
-// nothing) if FIRESTORE_CONFIG hasn't been filled in yet, so the recipe
-// page still works fine before that one-time setup is done.
-async function initReactions(slug, container) {
+// Renders the like/love counts + a "React on GitHub" link into `container`
+// for the given recipe. No-ops quietly (hides the section) if this recipe
+// has no companion issue yet, so older/test recipes don't show a broken
+// widget.
+async function initReactions(recipe, container) {
   if (!container) return;
-  if (!FIRESTORE_CONFIG.projectId || !FIRESTORE_CONFIG.apiKey) {
+  if (!recipe.issueNumber) {
     container.hidden = true;
     return;
   }
 
+  const issueUrl = `https://github.com/${REACTIONS_REPO}/issues/${recipe.issueNumber}`;
+
   container.innerHTML = `
-    <button class="reaction-btn" data-kind="likes" type="button" aria-label="Like this recipe">
+    <span class="reaction-pill" data-kind="likes">
       <span class="reaction-emoji">&#128077;</span>
       <span class="reaction-count" data-kind="likes">&hellip;</span>
-    </button>
-    <button class="reaction-btn" data-kind="loves" type="button" aria-label="Love this recipe">
+    </span>
+    <span class="reaction-pill" data-kind="loves">
       <span class="reaction-emoji">&#10084;&#65039;</span>
       <span class="reaction-count" data-kind="loves">&hellip;</span>
-    </button>
+    </span>
+    <a class="reaction-link" href="${issueUrl}" target="_blank" rel="noopener">React on GitHub &#8599;</a>
+    <button class="reaction-refresh" type="button" title="Refresh counts" aria-label="Refresh reaction counts">&#8635;</button>
   `;
 
-  const buttons = container.querySelectorAll(".reaction-btn");
   const countEls = {
     likes: container.querySelector('.reaction-count[data-kind="likes"]'),
     loves: container.querySelector('.reaction-count[data-kind="loves"]'),
   };
+  const refreshBtn = container.querySelector(".reaction-refresh");
 
-  function paintReactedState() {
-    buttons.forEach((btn) => {
-      const kind = btn.dataset.kind;
-      btn.classList.toggle("is-reacted", hasReacted(slug, kind));
-      btn.disabled = hasReacted(slug, kind);
-    });
+  async function loadCounts() {
+    try {
+      const counts = await fetchIssueReactionCounts(recipe.issueNumber);
+      countEls.likes.textContent = counts.likes;
+      countEls.loves.textContent = counts.loves;
+    } catch (err) {
+      countEls.likes.textContent = "?";
+      countEls.loves.textContent = "?";
+    }
   }
 
-  try {
-    const counts = await fetchReactionCounts(slug);
-    countEls.likes.textContent = counts.likes;
-    countEls.loves.textContent = counts.loves;
-  } catch (err) {
-    container.innerHTML = '<p class="state-message is-error">Couldn\'t load reactions.</p>';
-    return;
-  }
+  refreshBtn.addEventListener("click", () => loadCounts());
 
-  paintReactedState();
-
-  buttons.forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const kind = btn.dataset.kind;
-      if (hasReacted(slug, kind) || btn.disabled) return;
-
-      btn.disabled = true;
-      const countEl = countEls[kind];
-      const previous = parseInt(countEl.textContent, 10) || 0;
-      countEl.textContent = previous + 1; // optimistic update
-      markReacted(slug, kind);
-      btn.classList.add("is-reacted");
-
-      try {
-        await incrementReactionField(slug, kind);
-      } catch (err) {
-        // Roll back on failure so the count stays honest.
-        countEl.textContent = previous;
-        localStorage.removeItem(reactedKey(slug, kind));
-        btn.classList.remove("is-reacted");
-        btn.disabled = false;
-      }
-    });
-  });
+  await loadCounts();
 }

@@ -121,6 +121,25 @@ const GitHubRepo = (() => {
     });
   }
 
+  // Creates the companion "reactions" issue for a new recipe. Requires the
+  // token to have Issues: Read and write permission, in addition to Contents.
+  async function createIssue(title, body) {
+    const data = await request("issues", {
+      method: "POST",
+      body: JSON.stringify({ title, body }),
+    });
+    return data.number;
+  }
+
+  // Keeps an existing recipe's reactions issue title in sync if the recipe
+  // is renamed. Best-effort - failures here shouldn't block saving the recipe.
+  async function updateIssueTitle(issueNumber, title) {
+    return request(`issues/${issueNumber}`, {
+      method: "PATCH",
+      body: JSON.stringify({ title }),
+    });
+  }
+
   return {
     OWNER,
     REPO,
@@ -134,5 +153,7 @@ const GitHubRepo = (() => {
     putBinaryFile,
     getFileSha,
     deleteFile,
+    createIssue,
+    updateIssueTitle,
   };
 })();
