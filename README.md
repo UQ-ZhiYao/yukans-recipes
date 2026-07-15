@@ -12,7 +12,9 @@ serves the files in this repo as-is.
   desktop, single-column on phone) and installable as an app — see below.
 - **Result output (view only):** [`index.html`](index.html) (recipe list) and
   [`recipe.html`](recipe.html) (single recipe) — read `data/recipes.json` and
-  render it. No edit controls anywhere on these pages.
+  render it. No edit controls anywhere on these pages. Clicking the site
+  title on the recipe list shows a QR code for the current site URL
+  (detected at runtime), for handing the page to someone in person.
 
 ## How it works
 
@@ -69,10 +71,10 @@ site — installing it does not affect `index.html`/`recipe.html`.
 - **iOS Safari:** use Share → "Add to Home Screen" (iOS doesn't support the
   automatic install prompt).
 
-The app icons at `assets/icons/icon-192.png`, `icon-512.png`, and
-`icon-maskable-512.png` are placeholders (a plain monogram). Swap them for a
-real logo whenever you have one — same filenames, same sizes (192×192 and
-512×512), and the manifest picks them up automatically.
+The app icons live at `assets/icons/icon-192.png`, `icon-512.png`, and
+`icon-maskable-512.png`. Replace them the same way if you ever want a
+different logo — same filenames, same sizes (192×192 and 512×512), and the
+manifest picks them up automatically.
 
 ## Running locally
 

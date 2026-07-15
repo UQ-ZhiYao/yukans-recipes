@@ -217,6 +217,80 @@ main {
   font-size: 0.9rem;
 }
 
+/* ---- QR code modal ---- */
+
+.site-title {
+  cursor: pointer;
+}
+
+.qr-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+}
+
+.qr-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(43, 38, 34, 0.55);
+}
+
+.qr-modal-panel {
+  position: relative;
+  background: var(--color-card-bg);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+  max-width: 320px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+.qr-modal-panel h2 {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+}
+
+.qr-modal-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: transparent;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--color-muted);
+}
+
+.qr-modal-close:hover {
+  color: var(--color-text);
+}
+
+.qr-code-container {
+  max-width: 220px;
+  margin: 0 auto;
+}
+
+.qr-code-container svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.qr-url-text {
+  margin: 1rem 0 0;
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  word-break: break-all;
+}
+
 /* ---- Admin pathway ---- */
 
 .admin-body {

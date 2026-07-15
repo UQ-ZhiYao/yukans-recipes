@@ -57,6 +57,47 @@ async function renderRecipeList() {
   }
 }
 
+// Clicking the site title on the main page shows a QR code for the current
+// site's URL instead of navigating — an easy way to hand this page to
+// someone else in person. Detects the URL at runtime so it's correct
+// whether the site is on the default GitHub Pages domain, a custom domain,
+// or running locally.
+function initQrModal() {
+  const link = document.getElementById("site-title-link");
+  const modal = document.getElementById("qr-modal");
+  if (!link || !modal) return;
+
+  const container = document.getElementById("qr-code-container");
+  const urlText = document.getElementById("qr-url-text");
+  const closeBtn = document.getElementById("qr-modal-close");
+
+  function openModal() {
+    const siteUrl = new URL(".", window.location.href).href;
+    const qr = qrcode(0, "M");
+    qr.addData(siteUrl);
+    qr.make();
+    container.innerHTML = qr.createSvgTag({ cellSize: 5, margin: 2, scalable: true });
+    urlText.textContent = siteUrl;
+    modal.hidden = false;
+    closeBtn.focus();
+  }
+
+  function closeModal() {
+    modal.hidden = true;
+    link.focus();
+  }
+
+  link.addEventListener("click", (e) => {
+    e.preventDefault();
+    openModal();
+  });
+  closeBtn.addEventListener("click", closeModal);
+  modal.querySelector(".qr-modal-backdrop").addEventListener("click", closeModal);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !modal.hidden) closeModal();
+  });
+}
+
 async function renderRecipeDetail() {
   const container = document.getElementById("recipe-detail");
   const params = new URLSearchParams(window.location.search);

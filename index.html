@@ -10,12 +10,22 @@
 <body>
   <header class="site-header">
     <div class="wrapper">
-      <a class="site-title" href="index.html">Yukan's recipes</a>
+      <a class="site-title" href="index.html" id="site-title-link">Yukan's recipes</a>
       <nav class="site-nav">
         <a href="https://www.instagram.com/yukancooktoo/" target="_blank" rel="noopener">Instagram</a>
       </nav>
     </div>
   </header>
+
+  <div id="qr-modal" class="qr-modal" hidden>
+    <div class="qr-modal-backdrop"></div>
+    <div class="qr-modal-panel" role="dialog" aria-modal="true" aria-labelledby="qr-modal-title">
+      <button id="qr-modal-close" class="qr-modal-close" type="button" aria-label="Close">&times;</button>
+      <h2 id="qr-modal-title">Scan to visit this site</h2>
+      <div id="qr-code-container" class="qr-code-container"></div>
+      <p id="qr-url-text" class="qr-url-text"></p>
+    </div>
+  </div>
 
   <main>
     <div class="wrapper">
@@ -36,9 +46,11 @@
     <div class="wrapper">Yukan's recipes &middot; All my recipes will (eventually) be put up here!</div>
   </footer>
 
+  <script src="assets/vendor/qrcode.js"></script>
   <script src="assets/js/view.js"></script>
   <script>
     renderRecipeList();
+    initQrModal();
   </script>
 </body>
 </html>
