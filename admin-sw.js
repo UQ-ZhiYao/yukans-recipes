@@ -3,13 +3,12 @@
  * It never touches GitHub API requests — those always go straight to the
  * network so saves/edits are never served stale or offline.
  */
-const CACHE_NAME = "yukans-recipes-admin-v1";
+const CACHE_NAME = "yukans-recipes-admin-v2";
 const SHELL_FILES = [
   "admin.html",
   "assets/css/style.css",
   "assets/js/admin.js",
   "assets/js/github-api.js",
-  "assets/vendor/marked.min.js",
   "admin-manifest.webmanifest",
   "assets/icons/icon-192.png",
   "assets/icons/icon-512.png",

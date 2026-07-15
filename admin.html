@@ -53,7 +53,6 @@
         <div class="recipe-picker">
           <label for="recipe-select">Recipe:</label>
           <select id="recipe-select"></select>
-          <button id="new-recipe-btn" class="btn btn-secondary" type="button">New recipe</button>
         </div>
 
         <form id="recipe-form">
@@ -94,11 +93,6 @@
             <textarea id="body-input" placeholder="Ingredients, steps, notes..."></textarea>
           </div>
 
-          <div class="field">
-            <label>Preview</label>
-            <div id="body-preview" class="md-preview"></div>
-          </div>
-
           <div class="btn-row">
             <button id="save-btn" class="btn btn-primary" type="submit">Save recipe</button>
             <button id="delete-btn" class="btn btn-danger" type="button" hidden>Delete recipe</button>
@@ -110,7 +104,6 @@
     </div>
   </main>
 
-  <script src="assets/vendor/marked.min.js"></script>
   <script src="assets/js/github-api.js"></script>
   <script src="assets/js/admin.js"></script>
 </body>

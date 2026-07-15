@@ -24,7 +24,6 @@ function cacheEls() {
     "logout-btn",
     "install-btn",
     "recipe-select",
-    "new-recipe-btn",
     "delete-btn",
     "recipe-form",
     "title-input",
@@ -34,7 +33,6 @@ function cacheEls() {
     "image-alt-input",
     "instagram-input",
     "body-input",
-    "body-preview",
     "current-image",
     "save-btn",
     "save-status",
@@ -138,7 +136,6 @@ function resetForm() {
   els["current-image"].innerHTML = "";
   els["remove-image-btn"].hidden = true;
   els["delete-btn"].hidden = true;
-  els["body-preview"].innerHTML = "";
   setStatus(els["save-status"], "");
 }
 
@@ -160,12 +157,7 @@ function loadRecipeIntoForm(slug) {
     : "";
   els["remove-image-btn"].hidden = !recipe.image;
   els["delete-btn"].hidden = false;
-  updatePreview();
   setStatus(els["save-status"], "");
-}
-
-function updatePreview() {
-  els["body-preview"].innerHTML = marked.parse(els["body-input"].value || "");
 }
 
 function readFileAsBase64(file) {
@@ -370,13 +362,11 @@ function initAdmin() {
   cacheEls();
   els["login-btn"].addEventListener("click", handleLogin);
   els["logout-btn"].addEventListener("click", handleLogout);
-  els["new-recipe-btn"].addEventListener("click", resetForm);
   els["recipe-select"].addEventListener("change", (e) => loadRecipeIntoForm(e.target.value));
   els["recipe-form"].addEventListener("submit", handleSave);
   els["delete-btn"].addEventListener("click", handleDelete);
   els["image-input"].addEventListener("change", handleImageChange);
   els["remove-image-btn"].addEventListener("click", handleRemoveImage);
-  els["body-input"].addEventListener("input", updatePreview);
   els["date-input"].value = todayIso();
   initInstallPrompt();
   registerServiceWorker();
