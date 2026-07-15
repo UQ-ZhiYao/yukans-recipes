@@ -1,30 +1,51 @@
 Website: https://uq-zhiyao.github.io/yukans-recipes/
 
+Plain HTML/CSS/JS — no build step, no server, no Jekyll/Ruby. GitHub Pages just
+serves the files in this repo as-is.
+
 ## Two pathways
 
-- **Admin (edit only):** `/admin/` — a [Decap CMS](https://decapcms.org/) editor for
-  writing and updating recipes. Requires GitHub login; only repo collaborators
-  can save changes. It only ever shows editing forms, never the rendered site.
-- **Result output (view only):** everything else — the public Jekyll site.
-  Visitors can only read recipes here; there is no edit UI on these pages.
+- **Admin (edit only):** [`admin.html`](admin.html) — a form for creating,
+  editing, and deleting recipes. Saves go straight to this repo via the
+  GitHub Contents API. It never renders the public site.
+- **Result output (view only):** [`index.html`](index.html) (recipe list) and
+  [`recipe.html`](recipe.html) (single recipe) — read `data/recipes.json` and
+  render it. No edit controls anywhere on these pages.
 
-## One-time setup for Admin login (GitHub OAuth)
+## How it works
 
-GitHub Pages can't run the OAuth callback itself, so the Admin pathway
-authenticates through a free Netlify OAuth proxy (you don't need to host
-anything on Netlify — it's only used for the login handshake):
+- `data/recipes.json` is the single source of truth: an array of recipe
+  objects (`slug`, `title`, `date`, `image`, `imageAlt`, `instagramUrl`, `body`
+  — `body` is Markdown, rendered client-side with [marked](https://marked.js.org/)).
+- `index.html`/`recipe.html` fetch that JSON file directly (same-origin, no
+  GitHub API calls, no auth) and render it — this is the read-only output.
+- `admin.html` reads/writes `data/recipes.json` and uploads images to
+  `images/<slug>/` directly through the GitHub REST API, authenticated with a
+  personal access token you paste in once (kept in `localStorage`, never
+  committed).
 
-1. Create a GitHub OAuth App: **GitHub → Settings → Developer settings →
-   OAuth Apps → New OAuth App**
-   - Homepage URL: `https://uq-zhiyao.github.io/yukans-recipes/`
-   - Authorization callback URL: `https://api.netlify.com/auth/done`
-   - Save the generated **Client ID** and **Client Secret**.
-2. Create a free Netlify account and a new site (it doesn't need to deploy
-   anything real — an empty/placeholder site is fine).
-3. In that Netlify site: **Site configuration → Access & security → OAuth →
-   Install provider**, and paste in the GitHub Client ID/Secret from step 1.
-4. That's it — visiting `/admin/` on the live site will now show a
-   "Login with GitHub" button.
+## One-time admin setup
 
-Only GitHub accounts with write access to this repo can log in and save
-recipes.
+1. On GitHub: **Settings → Developer settings → Personal access tokens →
+   Fine-grained tokens → Generate new token.**
+2. Restrict it to the **`uq-zhiyao/yukans-recipes`** repository only.
+3. Under Repository permissions, grant **Contents: Read and write**.
+4. Copy the generated token, open `/admin.html` on the live site, and paste it
+   into the login field.
+
+The token only ever lives in your browser's local storage — it is never
+written to any file in this repo. Treat it like a password: don't paste it
+into a shared/public computer, and revoke it from GitHub's settings if you
+ever suspect it's leaked.
+
+## Running locally
+
+Any static file server works, e.g.:
+
+```
+python3 -m http.server 8000
+```
+
+then open `http://localhost:8000/index.html`. `admin.html` works the same way
+locally — it always talks to the real GitHub repo, there's no "local" data
+store.

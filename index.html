@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yukan's recipes</title>
+  <meta name="description" content="All my recipes will (eventually) be put up here!">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrapper">
+      <a class="site-title" href="index.html">Yukan's recipes</a>
+      <nav class="site-nav">
+        <a href="https://www.instagram.com/yukancooktoo/" target="_blank" rel="noopener">Instagram</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrapper">
+      <h1 class="page-heading">Welcome to my recipe page!</h1>
+      <p class="page-intro">
+        I post detailed recipes now and then, and frequently post on Instagram. Follow me
+        there to keep updated on posts, and for additional content on my stories:
+        <a href="https://www.instagram.com/yukancooktoo/" target="_blank" rel="noopener">@yukancooktoo</a>
+      </p>
+
+      <ul id="recipe-list" class="recipe-list">
+        <li class="state-message">Loading recipes&hellip;</li>
+      </ul>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrapper">Yukan's recipes &middot; All my recipes will (eventually) be put up here!</div>
+  </footer>
+
+  <script src="assets/js/view.js"></script>
+  <script>
+    renderRecipeList();
+  </script>
+</body>
+</html>

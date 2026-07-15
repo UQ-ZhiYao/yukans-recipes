@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Admin — Yukan's recipes</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="admin-body">
+  <header class="admin-header">
+    <div class="wrapper">
+      <a href="index.html">&larr; Yukan's recipes</a>
+      <span class="admin-badge">Admin · edit only</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrapper">
+
+      <section id="login-panel" class="admin-panel">
+        <h2>Log in</h2>
+        <p>
+          Paste a GitHub <strong>fine-grained personal access token</strong> scoped to the
+          <code>uq-zhiyao/yukans-recipes</code> repo only, with <strong>Contents: read and write</strong>
+          permission. It's stored in this browser's local storage and is never committed to the repo.
+        </p>
+        <div class="field">
+          <label for="token-input">Personal access token</label>
+          <input type="password" id="token-input" autocomplete="off" placeholder="github_pat_...">
+        </div>
+        <div class="btn-row">
+          <button id="login-btn" class="btn btn-primary" type="button">Log in</button>
+        </div>
+        <p id="login-status" class="status-line"></p>
+      </section>
+
+      <section id="editor-panel" class="admin-panel" hidden>
+        <div class="btn-row" style="justify-content: space-between; margin-bottom: 1.5rem;">
+          <div class="recipe-picker">
+            <label for="recipe-select" style="margin:0;">Recipe:</label>
+            <select id="recipe-select"></select>
+            <button id="new-recipe-btn" class="btn btn-secondary" type="button">New recipe</button>
+          </div>
+          <button id="logout-btn" class="btn btn-secondary" type="button">Log out</button>
+        </div>
+
+        <form id="recipe-form">
+          <div class="field">
+            <label for="title-input">Title</label>
+            <input type="text" id="title-input" required>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="date-input">Publish date</label>
+              <input type="date" id="date-input" required>
+            </div>
+            <div class="field">
+              <label for="instagram-input">Instagram link</label>
+              <input type="url" id="instagram-input" placeholder="https://www.instagram.com/...">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="image-input">Hero image
+              <span class="hint">Uploading a new file replaces the current image for this recipe.</span>
+            </label>
+            <input type="file" id="image-input" accept="image/*">
+            <div id="current-image"></div>
+          </div>
+
+          <div class="field">
+            <label for="image-alt-input">Hero image alt text</label>
+            <input type="text" id="image-alt-input" placeholder="Describe the photo">
+          </div>
+
+          <div class="field">
+            <label for="body-input">Recipe (Markdown)</label>
+            <textarea id="body-input" placeholder="Ingredients, steps, notes..."></textarea>
+          </div>
+
+          <div class="field">
+            <label>Preview</label>
+            <div id="body-preview" class="md-preview"></div>
+          </div>
+
+          <div class="btn-row">
+            <button id="save-btn" class="btn btn-primary" type="submit">Save recipe</button>
+            <button id="delete-btn" class="btn btn-danger" type="button" hidden>Delete recipe</button>
+          </div>
+          <p id="save-status" class="status-line"></p>
+        </form>
+      </section>
+
+    </div>
+  </main>
+
+  <script src="assets/vendor/marked.min.js"></script>
+  <script src="assets/js/github-api.js"></script>
+  <script src="assets/js/admin.js"></script>
+</body>
+</html>
