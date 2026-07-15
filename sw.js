@@ -7,12 +7,13 @@
  * Only the static shell is cached. data/recipes.json and recipe images
  * always go straight to the network so content is never served stale.
  */
-const CACHE_NAME = "yukans-recipes-member-v1";
+const CACHE_NAME = "yukans-recipes-member-v2";
 const SHELL_FILES = [
   "index.html",
   "recipe.html",
   "assets/css/style.css?v=2",
   "assets/js/view.js?v=2",
+  "assets/js/reactions.js?v=2",
   "assets/vendor/marked.min.js?v=2",
   "assets/vendor/qrcode.js?v=2",
   "manifest.webmanifest",

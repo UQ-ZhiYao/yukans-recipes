@@ -63,6 +63,69 @@ written to any file in this repo. Treat it like a password: don't paste it
 into a shared/public computer, and revoke it from GitHub's settings if you
 ever suspect it's leaked.
 
+## Setting up reactions (like/love counts)
+
+Each recipe page has like/love buttons with a shared count that every
+visitor sees — not just a per-browser tally. Since this site has no
+backend and nobody except you holds write credentials to this repo, that
+shared number lives in a free [Firebase](https://firebase.google.com)
+Firestore database instead, called directly from the browser via
+Firestore's plain REST API (no SDK to download — `assets/js/reactions.js`
+is a few small `fetch()` calls). Until you complete this setup, the
+reactions section quietly doesn't render — nothing else on the site is
+affected.
+
+1. Go to the [Firebase console](https://console.firebase.google.com),
+   create a free project (no billing required for this).
+2. **Build → Firestore Database → Create database.** Start in production
+   mode (any region is fine).
+3. In Firestore, go to the **Rules** tab and replace the rules with:
+
+   ```
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /reactions/{slug} {
+         allow get: if true;
+         allow list: if false;
+         allow create: if request.resource.data.keys().hasOnly(['likes', 'loves'])
+                       && request.resource.data.likes is int && request.resource.data.likes >= 0 && request.resource.data.likes <= 1
+                       && request.resource.data.loves is int && request.resource.data.loves >= 0 && request.resource.data.loves <= 1;
+         allow update: if request.resource.data.keys().hasOnly(['likes', 'loves'])
+                       && request.resource.data.likes is int && request.resource.data.loves is int
+                       && (
+                            (request.resource.data.likes == resource.data.likes + 1 && request.resource.data.loves == resource.data.loves)
+                         || (request.resource.data.loves == resource.data.loves + 1 && request.resource.data.likes == resource.data.likes)
+                          );
+         allow delete: if false;
+       }
+     }
+   }
+   ```
+
+   This only ever allows creating a recipe's reaction doc with 0/1 counts,
+   or bumping exactly one of `likes`/`loves` by exactly 1 per request —
+   nothing else is ever writable, and nobody can list/enumerate all
+   documents. It can't stop someone from clicking rapidly with a script
+   (there's no login to rate-limit against), but it can't be used to
+   tamper with anything beyond these two small counters either.
+4. **Project settings (gear icon) → General → Your apps → Web app (`</>`).**
+   Register an app (no Firebase Hosting needed). Copy the `projectId` and
+   `apiKey` from the shown config object — these are public identifiers,
+   not secrets; Firebase's security model relies on the Rules above, not
+   on hiding them.
+5. Paste both into `assets/js/reactions.js`:
+
+   ```js
+   const FIRESTORE_CONFIG = {
+     projectId: "your-project-id",
+     apiKey: "your-web-api-key",
+   };
+   ```
+
+That's it — no other files need to change. Reaction counts start at 0/0
+for every recipe the first time someone reacts to it.
+
 ## Installing as apps (PWA)
 
 There are **two separate installable apps**, so a phone or desktop can have
