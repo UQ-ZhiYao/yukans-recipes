@@ -27,6 +27,7 @@ html {
 
 body {
   margin: 0;
+  overflow-x: hidden;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   color: var(--color-text);
   background: var(--color-bg);
@@ -557,6 +558,7 @@ main {
 
 .field-row .field {
   flex: 1;
+  min-width: 0; /* flex items default to min-width:auto, which can force the row wider than its container */
 }
 
 .btn {
@@ -672,11 +674,14 @@ main {
   }
 
   .recipe-picker {
+    flex-direction: column;
+    align-items: stretch;
     width: 100%;
   }
 
   .recipe-picker select {
     width: 100%;
+    min-width: 0;
   }
 
   .recipe-card {
