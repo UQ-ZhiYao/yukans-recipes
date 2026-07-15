@@ -1,15 +1,21 @@
 /*
- * Service worker for the installable Admin app shell only.
- * It never touches GitHub API requests — those always go straight to the
- * network so saves/edits are never served stale or offline.
+ * Service worker for the installable Member (public, view-only) app shell.
+ * Scoped to the site root, but /admin/ registers its own more specific
+ * service worker, which always wins for admin pages — the two installable
+ * apps stay independent even though this scope technically covers /admin/.
+ *
+ * Only the static shell is cached. data/recipes.json and recipe images
+ * always go straight to the network so content is never served stale.
  */
-const CACHE_NAME = "yukans-recipes-admin-v3";
+const CACHE_NAME = "yukans-recipes-member-v1";
 const SHELL_FILES = [
-  "admin.html",
+  "index.html",
+  "recipe.html",
   "assets/css/style.css?v=2",
-  "assets/js/admin.js?v=2",
-  "assets/js/github-api.js?v=2",
-  "admin-manifest.webmanifest",
+  "assets/js/view.js?v=2",
+  "assets/vendor/marked.min.js?v=2",
+  "assets/vendor/qrcode.js?v=2",
+  "manifest.webmanifest",
   "assets/icons/icon-192.png",
   "assets/icons/icon-512.png",
 ];
@@ -34,10 +40,6 @@ const SHELL_PATHS = SHELL_FILES.map((f) => f.split("?")[0]);
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
-  // Only ever serve the admin app shell from cache. Everything else
-  // (GitHub API calls, recipe images, the public site) goes straight
-  // to the network untouched. Compare against pathnames only — a
-  // cache-busting "?v=2" query string never shows up in url.pathname.
   const isShellRequest =
     url.origin === self.location.origin &&
     SHELL_PATHS.some((p) => url.pathname.endsWith(`/${p}`) || url.pathname.endsWith(p));

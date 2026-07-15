@@ -5,16 +5,18 @@ serves the files in this repo as-is.
 
 ## Two pathways
 
-- **Admin (edit only):** [`admin.html`](admin.html) — a form for creating,
-  editing, and deleting recipes (including adding, replacing, or removing the
-  hero image). Saves go straight to this repo via the GitHub Contents API. It
-  never renders the public site. The layout is responsive (comfortable on
-  desktop, single-column on phone) and installable as an app — see below.
+- **Admin (edit only):** [`admin/index.html`](admin/index.html) — a form for
+  creating, editing, and deleting recipes (including adding, replacing, or
+  removing the hero image). Saves go straight to this repo via the GitHub
+  Contents API. It never renders the public site. The layout is responsive
+  (comfortable on desktop, single-column on phone) and installable as its own
+  app — see below.
 - **Result output (view only):** [`index.html`](index.html) (recipe list) and
   [`recipe.html`](recipe.html) (single recipe) — read `data/recipes.json` and
   render it. No edit controls anywhere on these pages. Clicking the site
   title on the recipe list shows a QR code for the current site URL
-  (detected at runtime), for handing the page to someone in person.
+  (detected at runtime), for handing the page to someone in person. Also
+  installable as its own app — see below.
 
 ## How it works
 
@@ -26,7 +28,7 @@ serves the files in this repo as-is.
   GitHub API calls, no auth) and render it — this is the read-only output.
   The recipe list uses `thumbnail` (small); the recipe page uses `image`
   (full-size) for the hero photo.
-- `admin.html` reads/writes `data/recipes.json` and uploads images to
+- `admin/index.html` reads/writes `data/recipes.json` and uploads images to
   `images/<slug>/` directly through the GitHub REST API, authenticated with a
   personal access token you paste in once (kept in `localStorage`, never
   committed).
@@ -43,7 +45,9 @@ generates and uploads two JPEGs per image:
 - a **thumbnail**, capped at 480px, used on the recipe list.
 
 This is why "Remove image" deletes two files, and why `recipes.json` has
-both an `image` and a `thumbnail` field per recipe.
+both an `image` and a `thumbnail` field per recipe. Paths in `recipes.json`
+are stored relative to the repo root (for the public pages); the admin page
+prefixes them with `../` since it lives one folder down, at `/admin/`.
 
 ## One-time admin setup
 
@@ -51,7 +55,7 @@ both an `image` and a `thumbnail` field per recipe.
    Fine-grained tokens → Generate new token.**
 2. Restrict it to the **`uq-zhiyao/yukans-recipes`** repository only.
 3. Under Repository permissions, grant **Contents: Read and write**.
-4. Copy the generated token, open `/admin.html` on the live site, and paste it
+4. Copy the generated token, open `/admin/` on the live site, and paste it
    into the login field.
 
 The token only ever lives in your browser's local storage — it is never
@@ -59,22 +63,32 @@ written to any file in this repo. Treat it like a password: don't paste it
 into a shared/public computer, and revoke it from GitHub's settings if you
 ever suspect it's leaked.
 
-## Installing the Admin app (PWA)
+## Installing as apps (PWA)
 
-`admin.html` is an installable Progressive Web App, separate from the public
-site — installing it does not affect `index.html`/`recipe.html`.
+There are **two separate installable apps**, so a phone or desktop can have
+both at once without them being confused for each other:
+
+|              | Member app                          | Admin app                         |
+|--------------|--------------------------------------|------------------------------------|
+| Pages        | `index.html`, `recipe.html`          | `admin/index.html`                 |
+| Icon         | logo on a white background           | same logo, plus a diagonal blue "ADMIN" ribbon |
+| Manifest     | `manifest.webmanifest` (scope `/`)   | `admin/manifest.webmanifest` (scope `/admin/`) |
+| Service worker | `sw.js`                            | `admin/sw.js`                      |
+
+Each has its own manifest, icon set, and service worker, scoped so installing
+one never affects the other.
 
 - **Desktop Chrome/Edge:** an install icon appears in the address bar, or use
-  the "Install app" button in the admin page's top bar.
-- **Android:** browser will show an "Install app"/"Add to Home screen" prompt,
-  or use the in-page "Install app" button.
+  the "Install app" button in that app's header.
+- **Android:** the browser shows an "Install app"/"Add to Home screen"
+  prompt, or use the in-page "Install app" button.
 - **iOS Safari:** use Share → "Add to Home Screen" (iOS doesn't support the
   automatic install prompt).
 
-The app icons live at `assets/icons/icon-192.png`, `icon-512.png`, and
-`icon-maskable-512.png`. Replace them the same way if you ever want a
-different logo — same filenames, same sizes (192×192 and 512×512), and the
-manifest picks them up automatically.
+The app icons live at `assets/icons/icon-*.png` (Member) and
+`assets/icons/icon-admin-*.png` (Admin). Replace them the same way if you
+ever want different artwork — same filenames, same sizes (192×192 and
+512×512), and both manifests pick them up automatically.
 
 ## Running locally
 
@@ -84,6 +98,6 @@ Any static file server works, e.g.:
 python3 -m http.server 8000
 ```
 
-then open `http://localhost:8000/index.html`. `admin.html` works the same way
-locally — it always talks to the real GitHub repo, there's no "local" data
-store.
+then open `http://localhost:8000/index.html`. `admin/index.html` works the
+same way locally — it always talks to the real GitHub repo, there's no
+"local" data store.

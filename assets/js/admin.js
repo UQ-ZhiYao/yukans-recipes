@@ -156,8 +156,11 @@ function loadRecipeIntoForm(slug) {
   els["instagram-input"].value = recipe.instagramUrl || "";
   els["body-input"].value = recipe.body || "";
   els["image-input"].value = "";
+  // recipe.image is stored repo-root-relative (for the public site, which
+  // lives at the repo root); this admin page lives one level down at
+  // /admin/, so the preview needs a "../" prefix to resolve to the same file.
   els["current-image"].innerHTML = recipe.image
-    ? `<img class="thumb-preview" src="${recipe.image}" onerror="this.remove()" alt="">`
+    ? `<img class="thumb-preview" src="../${recipe.image}" onerror="this.remove()" alt="">`
     : "";
   els["remove-image-btn"].hidden = !recipe.image;
   els["delete-btn"].hidden = false;
@@ -398,7 +401,7 @@ function initInstallPrompt() {
 
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("admin-sw.js").catch(() => {
+  navigator.serviceWorker.register("sw.js").catch(() => {
     /* offline install support is a nice-to-have, not required for the app to work */
   });
 }

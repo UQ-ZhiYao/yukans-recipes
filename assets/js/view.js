@@ -136,3 +136,37 @@ async function renderRecipeDetail() {
     container.innerHTML = `<p class="state-message is-error">Couldn't load recipe: ${escapeHtml(err.message)}</p>`;
   }
 }
+
+// Installable "Member" app (view only) — separate PWA from the Admin app,
+// with its own manifest/icons/service worker so the two installs never mix.
+let deferredInstallPrompt = null;
+
+function initInstallPrompt() {
+  const installBtn = document.getElementById("install-btn");
+  if (!installBtn) return;
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    installBtn.hidden = false;
+  });
+
+  installBtn.addEventListener("click", async () => {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    installBtn.hidden = true;
+  });
+
+  window.addEventListener("appinstalled", () => {
+    installBtn.hidden = true;
+  });
+}
+
+function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+  navigator.serviceWorker.register("sw.js").catch(() => {
+    /* offline install support is a nice-to-have, not required for the app to work */
+  });
+}

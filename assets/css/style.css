@@ -72,8 +72,13 @@ img {
   color: var(--color-text);
 }
 
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
 .site-nav a {
-  margin-left: 1.25rem;
   text-decoration: none;
   color: var(--color-muted);
   font-size: 0.95rem;
