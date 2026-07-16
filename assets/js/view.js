@@ -119,6 +119,11 @@ async function renderRecipeDetail() {
       return;
     }
     document.title = `${recipe.title} — Yukan's recipes`;
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      const excerpt = (recipe.body || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 155);
+      metaDescription.setAttribute("content", excerpt || `${recipe.title} — a recipe from Yukan's recipes.`);
+    }
     container.innerHTML = `
       <header class="post-header">
         <h1 class="post-title">${escapeHtml(recipe.title)}</h1>

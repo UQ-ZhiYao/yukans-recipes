@@ -36,3 +36,7 @@
 ehthumbs.db
 Thumbs.db
 
+# Generated at deploy time by .github/workflows/static.yml, from
+# data/recipes.json - never hand-edit or commit this.
+/sitemap.xml
+

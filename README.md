@@ -1,4 +1,4 @@
-Website: https://uq-zhiyao.github.io/yukans-recipes/
+Website: https://yukans-recipes.com/
 
 Plain HTML/CSS/JS — no build step, no server, no Jekyll/Ruby. GitHub Pages just
 serves the files in this repo as-is.
@@ -49,6 +49,23 @@ load can briefly show the previous version before the background refresh
 catches up on the load after that. Given this is a personal recipe blog
 rather than anything real-time, that's the right side to err on for making
 the common case (repeat visits) feel instant.
+
+### Search engines (SEO)
+
+- `robots.txt` allows crawling of the public pages and blocks `/admin/`
+  (which also carries its own `<meta name="robots" content="noindex,
+  nofollow">` as a second layer), and points crawlers at `sitemap.xml`.
+- `sitemap.xml` is **not** committed to the repo — it's generated fresh from
+  `data/recipes.json` on every deploy by
+  `.github/scripts/generate-sitemap.js` (wired into
+  `.github/workflows/static.yml`, right before the Pages upload step), so it
+  never goes stale as recipes are added, edited, or removed. It's ignored in
+  `.gitignore` for the same reason.
+- `recipe.html` gets a real per-recipe `<meta name="description">` set at
+  render time in `view.js` (a plain-text excerpt of that recipe's body), so
+  search results show a relevant snippet instead of a generic one.
+- `CNAME` pins the custom domain (`yukans-recipes.com`) so GitHub Pages
+  keeps serving it there across deploys.
 
 ### Image handling
 
