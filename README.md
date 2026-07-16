@@ -34,6 +34,22 @@ serves the files in this repo as-is.
   personal access token you paste in once (kept in `localStorage`, never
   committed).
 
+### Speed
+
+`data/recipes.json` is preloaded (`<link rel="preload">`) so the fetch starts
+immediately instead of waiting for scripts to download and run first, and
+`sw.js` caches it with a stale-while-revalidate strategy — same as the rest
+of the app shell: serve instantly from cache if we have it, refresh that
+cache in the background for next time. Verified this directly by blocking
+`data/recipes.json`'s network entirely on a repeat visit and confirming the
+recipe list/detail pages still rendered in ~100ms from cache.
+
+Trade-off: right after editing a recipe, a returning visitor's very next
+load can briefly show the previous version before the background refresh
+catches up on the load after that. Given this is a personal recipe blog
+rather than anything real-time, that's the right side to err on for making
+the common case (repeat visits) feel instant.
+
 ### Image handling
 
 Uploading a hero image in the admin page doesn't ship the original file —

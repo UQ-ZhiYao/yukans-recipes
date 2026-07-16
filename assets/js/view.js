@@ -6,7 +6,9 @@ async function loadRecipes() {
   // "no-cache" (not "no-store") - always revalidates with the server so
   // edits show up right away, but lets the browser reuse the cached body
   // on a 304 instead of re-downloading the whole file every single visit.
-  const res = await fetch("data/recipes.json", { cache: "no-cache" });
+  // priority: "high" (ignored by browsers that don't support it) nudges this
+  // ahead of lower-priority requests competing for the connection.
+  const res = await fetch("data/recipes.json", { cache: "no-cache", priority: "high" });
   if (!res.ok) throw new Error("Could not load recipes.json");
   const recipes = await res.json();
   return recipes.slice().sort((a, b) => (a.date < b.date ? 1 : -1));
