@@ -16,11 +16,11 @@
  * their Cache-Control header) and this avoids ever going stale on a new
  * upload replacing the same filename.
  */
-const CACHE_NAME = "yukans-recipes-member-v9";
+const CACHE_NAME = "yukans-recipes-member-v10";
 const SHELL_FILES = [
   "index.html",
   "recipe.html",
-  "assets/css/style.css?v=7",
+  "assets/css/style.css?v=8",
   "assets/js/view.js?v=6",
   "assets/vendor/marked.min.js?v=2",
   "assets/vendor/qrcode.js?v=2",
